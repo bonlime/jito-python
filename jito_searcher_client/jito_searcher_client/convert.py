@@ -1,4 +1,10 @@
-from solana.transaction import Transaction
+try:
+    from solana.transaction import Transaction
+    IS_SOLANA_TRANSACTION = True
+except ModuleNotFoundError:
+    # this allows support of newer 0.35+ versions of solana package
+    from solders.transaction import Transaction
+    IS_SOLANA_TRANSACTION = False
 from solders.transaction import VersionedTransaction
 
 from jito_searcher_client.generated.packet_pb2 import Meta, Packet
@@ -21,6 +27,6 @@ def tx_to_protobuf_packet(tx: Transaction) -> Packet:
     Note: setting packet.meta.size is required, the rest are optional
     """
     return Packet(
-        data=tx.serialize(),
+        data=tx.serialize() if IS_SOLANA_TRANSACTION else bytes(tx),
         meta=Meta(size=len(tx.serialize()), addr="0.0.0.0", port=0, flags=None, sender_stake=0),
     )
